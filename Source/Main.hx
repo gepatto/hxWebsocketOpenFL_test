@@ -20,6 +20,7 @@ import hx.ws.WebSocketServer;
 
 class Main extends Sprite
 {
+	var wsserver:WebSocketServer<MyHandler>;
 	var txtStatus:TextField;
 	var tfStatus:TextFormat;
 	var testTimer:Timer;
@@ -39,12 +40,13 @@ class Main extends Sprite
 		txtStatus.width = 800;txtStatus.height = 600;
 		addChild(txtStatus);
 
+
 		MyHandler.onStatus.add( showMessage );
 		Log.mask = Log.INFO | Log.DEBUG | Log.DATA;
-        var server = new WebSocketServer<MyHandler>("127.0.0.1", 3000, 10);
-        server.start();
+        wsserver = new WebSocketServer<MyHandler>("127.0.0.1", 3000, 10);
+        wsserver.start();
 
-		//addEventListener(Event.ENTER_FRAME, onEnterFrame);
+		addEventListener(Event.ENTER_FRAME, onEnterFrame);
 
 		loader = new URLLoader();
 		request = new URLRequest("http://127.0.0.1:3000");
@@ -78,7 +80,7 @@ class Main extends Sprite
 		}
 	}
 
-	// function onEnterFrame(e:Event){
-
-	// }
+	function onEnterFrame(e:Event){
+		wsserver.tick();
+	}
 }
