@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<meta title="CppServer" package="com.sample.cppserver" version="1.0.0" company="Company Name" />
+	<app main="Main" path="Export" file="CppServer" />
+	
+	<source path="Source" />
+	
+	<haxelib name="openfl" />
+	<haxelib name="signals" />
+	<haxelib name="hxWebSockets" />
+	
+	<assets path="Assets" rename="assets" />
+	<window background="#333333"/>
+
+</project>
