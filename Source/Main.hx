@@ -1,31 +1,26 @@
 package;
 
+import openfl.ui.Keyboard;
+import openfl.events.KeyboardEvent;
 import openfl.text.TextFormat;
 import openfl.text.TextField;
 import openfl.text.TextFormatAlign;
 import openfl.events.Event;
-import openfl.events.HTTPStatusEvent;
-import openfl.events.Event;
-import openfl.events.IOErrorEvent;
-import openfl.events.ErrorEvent;
-import openfl.events.TimerEvent;
 import openfl.display.Sprite;
-import openfl.net.URLLoader;
-import openfl.net.URLRequest;
 import openfl.Assets;
-import openfl.utils.Timer;
-
 import hx.ws.Log;
 import hx.ws.WebSocketServer;
+
+import HttpTest;
 
 class Main extends Sprite
 {
 	var wsserver:WebSocketServer<MyHandler>;
+	var txtName:TextField;
 	var txtStatus:TextField;
 	var tfStatus:TextFormat;
-	var testTimer:Timer;
-	var loader:URLLoader;
-	var request:URLRequest;
+	var msgBuffer:Array<String> = [];
+	var httptest:HttpTest;
 
 	public function new()
 	{
@@ -34,53 +29,52 @@ class Main extends Sprite
 		tfStatus = new TextFormat(Assets.getFont('assets/fonts/Squada_One.ttf').name,12,0xffffff);
 		tfStatus.align = TextFormatAlign.LEFT;
 
+		txtName = new TextField();
+		txtName.defaultTextFormat =  new TextFormat(Assets.getFont('assets/fonts/Squada_One.ttf').name,18,0xffffff);
+		txtName.x = 16;txtName.y = 4;
+		txtName.width = 300;
+		txtName.height = 16;
+		txtName.text = "hxWebsocketServer OpenFL Test";
+		addChild(txtName);
+
 		txtStatus = new TextField();
 		txtStatus.defaultTextFormat = tfStatus;
-		txtStatus.x = 16;txtStatus.y = 16;
-		txtStatus.width = 800;txtStatus.height = 600;
+		txtStatus.x = 16;txtStatus.y = 32;
+		txtStatus.width = stage.stageWidth - 32;
+		txtStatus.height = stage.stageHeight - 56;
+		txtStatus.multiline = true;
+		txtStatus.border = true;
+		txtStatus.borderColor = 0xe0e0e0;
 		addChild(txtStatus);
 
 
 		MyHandler.onStatus.add( showMessage );
-		Log.mask = Log.INFO | Log.DEBUG | Log.DATA;
+
+		Log.mask = Log.DEBUG; //Log.INFO | Log.DEBUG | Log.DATA;
+
         wsserver = new WebSocketServer<MyHandler>("127.0.0.1", 3000, 10);
         wsserver.start();
 
-		addEventListener(Event.ENTER_FRAME, onEnterFrame);
+		addEventListener(Event.ENTER_FRAME, e->wsserver.tick());
+		stage.addEventListener(KeyboardEvent.KEY_UP, stage_keyup);
 
-		loader = new URLLoader();
-		request = new URLRequest("http://127.0.0.1:3000");
+		httptest = new HttpTest(1000);
+	}
 
-		//request.method = URLRequestMethod.GET;
-		loader.addEventListener(Event.COMPLETE, function(e:Event) {
-			trace("complete", e);
-		});
-		loader.addEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, function(e:HTTPStatusEvent) {
-			trace("HTTPSTATUS", e.status);
-		});
-		loader.addEventListener(ErrorEvent.ERROR, function(err:ErrorEvent) {
-			trace("Error", err.text);
-		});
-		loader.addEventListener(IOErrorEvent.IO_ERROR, function(err:IOErrorEvent) {
-			trace("IOError", err.text);
-		});
-
-		testTimer = new Timer(200,0);
-		testTimer.addEventListener(TimerEvent.TIMER, function(e:TimerEvent){
-			loader.load(request);
-		});
-
-		testTimer.start();
+	function stage_keyup(e:KeyboardEvent){
+		switch( e.keyCode ){
+			case Keyboard.T:
+				httptest.running?httptest.stop():httptest.start();
+		}
 	}
 	
 	function showMessage(msg:String){
 		if(msg!=null){
-			//txtStatus.appendText(msg + "\n");
-			txtStatus.text = msg + "\n";
+			msgBuffer.push(msg);
+			txtStatus.text = msgBuffer.join("\n");
+			if(txtStatus.maxScrollV > 1){
+				msgBuffer.shift();
+			}
 		}
-	}
-
-	function onEnterFrame(e:Event){
-		wsserver.tick();
 	}
 }
